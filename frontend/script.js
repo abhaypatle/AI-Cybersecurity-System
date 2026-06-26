@@ -1,5 +1,6 @@
 async function predictThreat() {
     try {
+
         const traffic = parseFloat(
             document.getElementById("traffic").value
         );
@@ -14,7 +15,7 @@ async function predictThreat() {
         }
 
         const response = await fetch(
-            "http://127.0.0.1:8000/predict",
+            "https://ai-cybersecurity-system.onrender.com/predict",
             {
                 method: "POST",
                 headers: {
@@ -27,18 +28,27 @@ async function predictThreat() {
             }
         );
 
+        if (!response.ok) {
+            throw new Error("API Error");
+        }
+
         const data = await response.json();
 
         document.getElementById("result").innerHTML = `
             <h2>${data.result}</h2>
             <h3>Severity: ${data.severity}</h3>
-            <p>Traffic Rate: ${data.traffic_rate}</p>
-            <p>Failed Logins: ${data.failed_logins}</p>
+            <p><strong>Traffic Rate:</strong> ${data.traffic_rate}</p>
+            <p><strong>Failed Logins:</strong> ${data.failed_logins}</p>
         `;
-    }
-    catch (error) {
+
+    } catch (error) {
+
         console.error(error);
-        document.getElementById("result").innerHTML =
-            "<h3>API Connection Error</h3>";
+
+        document.getElementById("result").innerHTML = `
+            <h3 style="color:red;">
+                API Connection Error
+            </h3>
+        `;
     }
 }
