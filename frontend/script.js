@@ -86,3 +86,42 @@ async function fetchLiveLogs() {
 }
 
 window.onload = fetchLiveLogs;
+async function fetchLogs() {
+    const tbody = document.querySelector('.soc-table tbody') || document.getElementById('logsTableBody');
+    if (!tbody) return;
+    try {
+        const res = await fetch('https://ai-cybersecurity-system-1.onrender.com/logs');
+        const data = await res.json();
+        const logs = data.telemetry_stream || data.logs || [];
+        
+        tbody.innerHTML = '';
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan=\"7\" style=\"text-align:center; padding:15px; color:#94a3b8;\">No incidents logged yet.</td></tr>';
+            return;
+        }
+
+        logs.slice(0, 8).forEach(item => {
+            const tr = document.createElement('tr');
+            const isBlocked = item.severity === 'HIGH';
+            tr.innerHTML = 
+                <td style=\"padding:8px;\"></td>
+                <td style=\"padding:8px; color:#00d2ff;\"></td>
+                <td style=\"padding:8px;\"></td>
+                <td style=\"padding:8px;\"></td>
+                <td style=\"padding:8px; font-weight:bold;\">%</td>
+                <td style=\"padding:8px; color:; font-weight:bold;\"></td>
+                <td style=\"padding:8px; color:;\"></td>
+            ;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan=\"7\" style=\"text-align:center; color:#ff1744;\">Failed to stream incident audit data.</td></tr>';
+    }
+}
+
+// Attach to Refresh button & Auto load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchLogs();
+    const refBtn = document.querySelector('.btn-secondary') || document.querySelector('button[onclick*=\"fetch\"]');
+    if (refBtn) refBtn.onclick = fetchLogs;
+});
