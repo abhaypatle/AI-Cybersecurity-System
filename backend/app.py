@@ -1,19 +1,19 @@
 ﻿import os
 import sys
 import sqlite3
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.config import DB_PATH, MODEL_PATH
-from backend.predict import ThreatDetectionEngine
+from backend.config import DB_PATH
+from backend.predict import engine
 from alerts.webhook_alert import dispatch_incident_alert
 
 app = FastAPI(
     title="AI Cybersecurity Threat Detection System",
-    description="Real-time Network Threat Scoring, SIEM Ingestion, and Automated Incident Defense API",
+    description="Real-Time Intrusion Detection & SIEM Engine",
     version="2.0.0"
 )
 
@@ -25,15 +25,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-engine = ThreatDetectionEngine(MODEL_PATH)
-
 class NetworkTelemetry(BaseModel):
-    source_ip: str = Field(default="192.168.1.100", description="Origin IPv4 address")
-    traffic_rate: float = Field(..., ge=0.0, description="Packets/Requests per second")
-    failed_logins: float = Field(..., ge=0.0, description="Failed authentication attempts")
-    session_duration: float = Field(default=60.0, ge=0.0, description="Session longevity in seconds")
-    bytes_transferred: float = Field(default=2048.0, ge=0.0, description="Volume of payload transferred")
-    port_scan_count: int = Field(default=1, ge=0, description="Targeted unique ports")
+    source_ip: str = Field(default="127.0.0.1")
+    traffic_rate: float
+    failed_logins: float
+    session_duration: float = 60.0
+    bytes_transferred: float = 2048.0
+    port_scan_count: int = 1
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -56,19 +54,19 @@ def init_db():
 
 init_db()
 
-@app.get("/", tags=["Health"])
-def health_status():
-    return {"system": "Active Defense Engine", "status": "operational", "version": "2.0.0"}
+@app.get("/")
+def health():
+    return {"status": "operational", "service": "AI Cybersecurity System v2.0"}
 
-@app.post("/predict", tags=["Inference"])
-def evaluate_traffic(data: NetworkTelemetry):
+@app.post("/predict")
+def predict_threat(data: NetworkTelemetry):
     try:
         verdict = engine.analyze(
-            data.traffic_rate,
-            data.failed_logins,
-            data.session_duration,
-            data.bytes_transferred,
-            data.port_scan_count
+            traffic_rate=data.traffic_rate,
+            failed_logins=data.failed_logins,
+            session_duration=data.session_duration,
+            bytes_transferred=data.bytes_transferred,
+            port_scan_count=data.port_scan_count
         )
 
         if verdict["severity"] in ["HIGH", "MEDIUM"]:
@@ -88,22 +86,27 @@ def evaluate_traffic(data: NetworkTelemetry):
         conn.commit()
         conn.close()
 
+        # Flat keys for frontend compatibility
         return {
-            "source_ip": data.source_ip,
-            "analysis": verdict,
-            "mitigation_action": "BLOCKED" if verdict["severity"] == "HIGH" else "PASS"
+            "result": verdict["result"],
+            "severity": verdict["severity"],
+            "traffic_rate": data.traffic_rate,
+            "failed_logins": data.failed_logins,
+            "risk_score": verdict["risk_score"],
+            "is_anomaly": verdict["is_anomaly"],
+            "mitigation_action": "BLOCKED" if verdict["severity"] == "HIGH" else "PASS",
+            "source_ip": data.source_ip
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=f"Inference Engine Error: {str(exc)}")
 
-@app.get("/logs", tags=["Audit"])
-def fetch_telemetry_logs():
+@app.get("/logs")
+def get_logs():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("SELECT id, source_ip, traffic_rate, failed_logins, risk_score, result, severity, timestamp FROM telemetry_audit ORDER BY id DESC LIMIT 50")
     rows = cur.fetchall()
     conn.close()
-
     return {
         "count": len(rows),
         "telemetry_stream": [
