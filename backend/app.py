@@ -3,6 +3,8 @@ import sys
 import sqlite3
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,6 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 
 class NetworkTelemetry(BaseModel):
     source_ip: str = Field(default="127.0.0.1")
@@ -55,7 +59,10 @@ def init_db():
 init_db()
 
 @app.get("/")
-def health():
+def serve_index():
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
     return {"status": "operational", "service": "AI Cybersecurity System v2.0"}
 
 @app.post("/predict")
@@ -86,7 +93,6 @@ def predict_threat(data: NetworkTelemetry):
         conn.commit()
         conn.close()
 
-        # Flat keys for frontend compatibility
         return {
             "result": verdict["result"],
             "severity": verdict["severity"],
@@ -114,3 +120,7 @@ def get_logs():
             for r in rows
         ]
     }
+
+# Mount static frontend assets
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")

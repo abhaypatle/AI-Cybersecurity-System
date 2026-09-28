@@ -130,7 +130,7 @@
     </div>
 
     <script>
-        const API_URL = "https://ai-cybersecurity-system-1.onrender.com";
+        const API_URL = window.location.origin.startsWith("http") ? window.location.origin : "https://ai-cybersecurity-system-1.onrender.com";
 
         async function runAnalysis() {
             const btn = document.getElementById("submitBtn");
