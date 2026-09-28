@@ -1,39 +1,91 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Cybersecurity Threat Detection</title>
-
+    <title>AI Cybersecurity SIEM & Threat Defense</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="soc-shell">
+        <header class="header">
+            <div class="badge">SEC-OPS LIVE</div>
+            <h1>AI Cybersecurity Threat Detection Engine</h1>
+            <p>Real-Time Dual-Model Telemetry & Automated Incident Mitigation</p>
+        </header>
 
-    <div class="container">
+        <div class="grid-layout">
+            <!-- Ingestion Form -->
+            <div class="panel form-panel">
+                <h2>Network Telemetry Ingestion</h2>
+                <div class="field">
+                    <label>Origin IPv4 Address</label>
+                    <input type="text" id="source_ip" value="198.51.100.42">
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Traffic Rate (Req/Sec)</label>
+                        <input type="number" id="traffic" value="850">
+                    </div>
+                    <div class="field">
+                        <label>Failed Auth Attempts</label>
+                        <input type="number" id="failed" value="45">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Session Duration (sec)</label>
+                        <input type="number" id="duration" value="5">
+                    </div>
+                    <div class="field">
+                        <label>Bytes Transferred</label>
+                        <input type="number" id="bytes" value="95000">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Unique Targeted Ports</label>
+                    <input type="number" id="ports" value="80">
+                </div>
+                <button id="analyze-btn" onclick="predictThreat()">Analyze Incident</button>
+            </div>
 
-        <h1>🛡 AI Cybersecurity Threat Detection</h1>
+            <!-- Threat Assessment Card -->
+            <div class="panel result-panel">
+                <h2>Security Verdict & Mitigation</h2>
+                <div id="result-box" class="empty-state">
+                    <p>Awaiting network telemetry telemetry stream...</p>
+                </div>
+            </div>
+        </div>
 
-        <input
-            type="number"
-            id="traffic"
-            placeholder="Traffic Rate"
-        >
-
-        <input
-            type="number"
-            id="failed"
-            placeholder="Failed Logins"
-        >
-
-        <button onclick="predictThreat()">
-            Analyze
-        </button>
-
-        <div id="result"></div>
-
+        <!-- Live Incident Logs Table -->
+        <div class="panel logs-panel">
+            <div class="logs-header">
+                <h2>Recent Incident Audit Trail</h2>
+                <button class="btn-sm" onclick="fetchLiveLogs()">Refresh Logs</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Source IP</th>
+                            <th>Traffic Rate</th>
+                            <th>Failed Logins</th>
+                            <th>Risk Score</th>
+                            <th>Severity</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr><td colspan="7" style="text-align:center;">Loading audit trail...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
-
 </body>
 </html>
