@@ -1,0 +1,26 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cyber-threat-detector
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cyber-threat-detector
+  template:
+    metadata:
+      labels:
+        app: cyber-threat-detector
+    spec:
+      containers:
+      - name: threat-engine
+        image: abhaypatle/ai-cybersecurity-system:latest
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
