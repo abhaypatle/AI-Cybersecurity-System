@@ -4,111 +4,207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Cybersecurity SOC Defense Console</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap">
+    <style>
+        :root {
+            --bg: #070d17;
+            --card: #0d1829;
+            --border: #1a2c47;
+            --cyan: #00d2ff;
+            --green: #00e676;
+            --red: #ff1744;
+            --orange: #ff9100;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'JetBrains Mono', monospace; }
+        body { background: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+        .wrapper { max-width: 1100px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }
+        header h1 { font-size: 1.3rem; color: #fff; }
+        .badge { background: #0052cc33; color: var(--cyan); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--cyan); }
+        .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+        .full-width { grid-column: span 2; margin-top: 20px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .card h2 { font-size: 0.95rem; margin-bottom: 16px; color: #fff; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+        input { width: 100%; background: #060c16; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; font-size: 0.85rem; }
+        input:focus { border-color: var(--cyan); outline: none; }
+        button { cursor: pointer; border: none; font-weight: 700; border-radius: 6px; font-family: inherit; }
+        .btn-submit { width: 100%; background: #0070f3; color: #fff; padding: 12px; margin-top: 8px; }
+        .btn-submit:hover { background: #005bb5; }
+        .btn-refresh { background: #14233a; border: 1px solid var(--border); color: var(--cyan); padding: 6px 12px; font-size: 0.75rem; }
+        .verdict-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 85%; text-align: center; }
+        .status-pill { padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 15px; }
+        .pill-threat { background: #ff174426; color: var(--red); border: 1px solid var(--red); }
+        .pill-safe { background: #00e67626; color: var(--green); border: 1px solid var(--green); }
+        .score-val { font-size: 3.5rem; font-weight: 700; line-height: 1; }
+        .score-desc { font-size: 0.8rem; color: var(--muted); margin-top: 6px; margin-bottom: 20px; }
+        .action-banner { font-size: 0.85rem; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
+        th { background: #060d18; color: var(--muted); padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 10px; border-bottom: 1px solid #142236; }
+        .cell-blocked { color: var(--red); font-weight: bold; }
+        .cell-pass { color: var(--green); font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div class="dashboard-wrapper">
-        <header class="soc-header">
-            <div class="brand">
-                <span class="shield-icon">🛡️</span>
-                <div>
-                    <h1>AI Cybersecurity SOC Defense Console</h1>
-                    <p class="subtitle">Dual-Engine Intrusion Detection & Real-Time Threat Mitigation</p>
-                </div>
+    <div class="wrapper">
+        <header>
+            <div>
+                <h1>🛡️ AI Cybersecurity SOC Defense Console</h1>
+                <p style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Dual-Engine Intrusion Detection & Real-Time Threat Mitigation</p>
             </div>
-            <div class="env-selector">
-                <button id="refreshLogsBtn" onclick="fetchLiveLogs()" class="btn-secondary">Refresh Logs</button>
-            </div>
+            <span class="badge">LIVE ENGINE READY</span>
         </header>
 
-        <main class="grid-container">
-            <!-- Telemetry Ingestion -->
-            <section class="card form-card">
+        <div class="grid">
+            <section class="card">
                 <h2>Network Telemetry Ingestion</h2>
-                <form id="telemetryForm" onsubmit="event.preventDefault(); sendAnalysis();">
-                    <div class="form-group">
-                        <label>SOURCE IPV4 ADDRESS</label>
-                        <input type="text" id="sourceIp" value="198.51.100.42" required>
+                <div class="form-group">
+                    <label>Source IPv4 Address</label>
+                    <input type="text" id="ip" value="198.51.100.42">
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Traffic Rate (Req/Sec)</label>
+                        <input type="number" id="traffic" value="850">
                     </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Traffic Rate (Req/Sec)</label>
-                            <input type="number" id="trafficRate" value="850" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Auth Failures</label>
-                            <input type="number" id="failedLogins" value="45" required>
-                        </div>
+                    <div>
+                        <label>Auth Failures</label>
+                        <input type="number" id="fails" value="45">
                     </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Session Duration (s)</label>
-                            <input type="number" id="sessionDuration" value="5" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Targeted Ports</label>
-                            <input type="number" id="portScanCount" value="80" required>
-                        </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Session Duration (s)</label>
+                        <input type="number" id="duration" value="5">
                     </div>
-                    <div class="form-group">
-                        <label>PAYLOAD BYTES</label>
-                        <input type="number" id="bytesTransferred" value="95000" required>
+                    <div>
+                        <label>Targeted Ports</label>
+                        <input type="number" id="ports" value="80">
                     </div>
-                    <button type="submit" id="analyzeBtn" class="btn-primary">
-                        ANALYZE TELEMETRY
-                    </button>
-                </form>
+                </div>
+                <div class="form-group">
+                    <label>Payload Bytes</label>
+                    <input type="number" id="bytes" value="95000">
+                </div>
+                <button type="button" class="btn-submit" id="submitBtn" onclick="runAnalysis()">ANALYZE TELEMETRY</button>
             </section>
 
-            <!-- Verdict & Defense -->
-            <section class="card verdict-card">
+            <section class="card">
                 <h2>Security Verdict & Mitigation</h2>
-                <div id="verdictBlock" class="verdict-container">
-                    <div class="badge-row">
-                        <span id="verdictStatus" class="status-badge badge-threat">THREAT DETECTED</span>
-                    </div>
-
-                    <div class="score-display">
-                        <h1 id="riskScore">100%</h1>
-                        <span class="subtext">Risk Score Computed</span>
-                    </div>
-
-                    <div id="actionStatus" class="action-alert">
-                        ACTION: BLOCKED (Firewall Rule Active)
-                    </div>
+                <div class="verdict-box">
+                    <div id="statusPill" class="status-pill pill-threat">AWAITING INPUT</div>
+                    <div id="scoreText" class="score-val">--%</div>
+                    <div class="score-desc">Risk Score Computed</div>
+                    <div id="actionText" class="action-banner">System Idle</div>
                 </div>
             </section>
 
-            <!-- Live Audit Stream -->
             <section class="card full-width">
-                <div class="audit-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <h2>Live Incident Audit Stream</h2>
+                    <button type="button" class="btn-refresh" onclick="fetchLogs()">Refresh</button>
                 </div>
-                <div class="table-container">
-                    <table class="soc-table">
-                        <thead>
-                            <tr>
-                                <th>Timestamp</th>
-                                <th>IP</th>
-                                <th>Traffic Rate</th>
-                                <th>Failed Logins</th>
-                                <th>Risk Score</th>
-                                <th>Severity</th>
-                                <th>Mitigation</th>
-                            </tr>
-                        </thead>
-                        <tbody id="auditLogsBody">
-                            <tr>
-                                <td colspan="7" class="loading-cell">Connecting to telemetry audit pipeline...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>IP</th>
+                            <th>Traffic Rate</th>
+                            <th>Failed Logins</th>
+                            <th>Risk Score</th>
+                            <th>Severity</th>
+                            <th>Mitigation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable">
+                        <tr><td colspan="7" style="text-align:center; padding:15px; color:var(--muted);">Loading telemetry stream...</td></tr>
+                    </tbody>
+                </table>
             </section>
-        </main>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        const API_URL = "https://ai-cybersecurity-system-1.onrender.com";
+
+        async function runAnalysis() {
+            const btn = document.getElementById("submitBtn");
+            btn.disabled = true;
+            btn.innerText = "EVALUATING PACKETS...";
+
+            const payload = {
+                source_ip: document.getElementById("ip").value,
+                traffic_rate: parseFloat(document.getElementById("traffic").value),
+                failed_logins: parseFloat(document.getElementById("fails").value),
+                session_duration: parseFloat(document.getElementById("duration").value),
+                port_scan_count: parseInt(document.getElementById("ports").value),
+                bytes_transferred: parseFloat(document.getElementById("bytes").value)
+            };
+
+            try {
+                const res = await fetch(API_URL + "/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                const isBlocked = (data.severity === "HIGH");
+                const pill = document.getElementById("statusPill");
+                pill.innerText = data.result;
+                pill.className = isBlocked ? "status-pill pill-threat" : "status-pill pill-safe";
+
+                document.getElementById("scoreText").innerText = data.risk_score + "%";
+                const action = document.getElementById("actionText");
+                action.innerText = isBlocked ? "ACTION: BLOCKED (Firewall Rule Active)" : "ACTION: PASS (Telemetry Verified)";
+                action.style.color = isBlocked ? "var(--red)" : "var(--green)";
+
+                fetchLogs();
+            } catch (err) {
+                alert("API Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ANALYZE TELEMETRY";
+            }
+        }
+
+        async function fetchLogs() {
+            const tbody = document.getElementById("logsTable");
+            try {
+                const res = await fetch(API_URL + "/logs");
+                const data = await res.json();
+                const list = data.telemetry_stream || [];
+
+                if (list.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:15px; color:var(--muted);'>No logged attacks.</td></tr>";
+                    return;
+                }
+
+                tbody.innerHTML = list.slice(0, 8).map(row => {
+                    const isHigh = (row.severity === "HIGH");
+                    return "<tr>" +
+                        "<td>" + (row.timestamp || "Realtime") + "</td>" +
+                        "<td style='color:var(--cyan);'>" + row.ip + "</td>" +
+                        "<td>" + row.traffic_rate + "</td>" +
+                        "<td>" + row.failed_logins + "</td>" +
+                        "<td><strong>" + row.risk_score + "%</strong></td>" +
+                        "<td style='color:" + (isHigh ? "var(--red)" : "var(--green)") + "; font-weight:bold;'>" + row.severity + "</td>" +
+                        "<td class='" + (isHigh ? "cell-blocked" : "cell-pass") + "'>" + (isHigh ? "BLOCKED" : "PASS") + "</td>" +
+                    "</tr>";
+                }).join("");
+            } catch (err) {
+                tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:15px; color:var(--red);'>Failed to load audit table.</td></tr>";
+            }
+        }
+
+        window.onload = function() {
+            fetchLogs();
+        };
+    </script>
 </body>
 </html>
